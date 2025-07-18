@@ -7,9 +7,8 @@ RUN npm config set registry https://registry.npmjs.org/
 RUN npm config set fetch-retry-mintimeout 60000
 RUN npm config set fetch-retry-maxtimeout 300000
 RUN npm config set fetch-retries 10
-RUN npm config set prefer-online true
-RUN npm config set maxsockets 1
-RUN npm config set network-timeout 600000
+# Force IPv4 via environment variables
+ENV NPM_CONFIG_IPV6=false
 # Try using a different approach - download packages manually first
 WORKDIR /app
 # Copy package files
