@@ -1,30 +1,36 @@
-FROM node:18-alpine
+FROM node:18-alpine as builder
 
-# Install yarn using apk (Alpine package manager) instead of npm
-RUN apk add --no-cache yarn
+# Install network debugging tools
+RUN apk add --no-cache curl netcat-openbsd
 
-# Configure DNS to prefer IPv4
-RUN echo 'precedence ::ffff:0:0/96  100' >> /etc/gai.conf
+# Test connectivity first
+RUN curl -4 -I https://registry.npmjs.org/ || echo "IPv4 test failed"
+RUN curl -6 -I https://registry.npmjs.org/ || echo "IPv6 test failed"
 
-# Set yarn registry
-RUN yarn config set registry https://registry.npmjs.org/
+# Try to force IPv4 DNS resolution
+RUN echo "104.16.25.34 registry.npmjs.org" >> /etc/hosts
 
 WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies with yarn
-RUN yarn install --verbose
+# Install dependencies
+RUN npm install
 
 # Copy source code
 COPY . .
 
 # Build the application
-RUN yarn build
+RUN npm run build
 
-# Expose port
+# Production stage
+FROM node:18-alpine
+WORKDIR /app
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/package*.json ./
+
 EXPOSE 3000
-
-# Start the application
-CMD ["yarn", "start"]
+CMD ["npm", "start"]
