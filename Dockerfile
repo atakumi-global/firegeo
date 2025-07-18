@@ -3,8 +3,8 @@ FROM node:18-alpine
 # Configure DNS to prefer IPv4
 RUN echo 'precedence ::ffff:0:0/96  100' >> /etc/gai.conf
 
-# Set npm registry and timeouts
-RUN npm config set registry https://registry.npmjs.org/
+# Try alternative npm registry
+RUN npm config set registry https://registry.yarnpkg.com/
 RUN npm config set fetch-retry-mintimeout 20000
 RUN npm config set fetch-retry-maxtimeout 120000
 RUN npm config set fetch-retries 5
