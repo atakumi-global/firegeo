@@ -1,22 +1,23 @@
-FROM node:18-alpine as builder
+FROM node:18-alpine AS builder
 
-# Install network debugging tools
-RUN apk add --no-cache curl netcat-openbsd
+# Install apk packages we need
+RUN apk add --no-cache curl
 
-# Test connectivity first
-RUN curl -4 -I https://registry.npmjs.org/ || echo "IPv4 test failed"
-RUN curl -6 -I https://registry.npmjs.org/ || echo "IPv6 test failed"
+# Create a custom npm configuration
+RUN npm config set prefer-online false
+RUN npm config set registry https://registry.npmjs.org/
+RUN npm config set fetch-retry-mintimeout 60000
+RUN npm config set fetch-retry-maxtimeout 300000
+RUN npm config set fetch-retries 10
 
-# Try to force IPv4 DNS resolution
-RUN echo "104.16.25.34 registry.npmjs.org" >> /etc/hosts
-
+# Try using a different approach - download packages manually first
 WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies
-RUN npm install
+# Try to install with maximum retries and timeouts
+RUN npm install --prefer-offline --no-audit --no-fund --maxsockets 1
 
 # Copy source code
 COPY . .
