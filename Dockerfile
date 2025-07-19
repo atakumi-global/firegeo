@@ -25,5 +25,9 @@ COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/package*.json ./
+
+ENV NODE_OPTIONS="--dns-result-order=ipv4first"
+RUN npm config set registry https://registry.npmjs.org/
+
 EXPOSE 3000
 CMD ["npm", "start"]
