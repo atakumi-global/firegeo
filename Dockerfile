@@ -12,8 +12,11 @@ ENV NPM_CONFIG_IPV6=false
 WORKDIR /app
 # Copy package files
 COPY package*.json ./
-# Try to install with maximum retries and timeouts
+
+# Set Node.js to prefer IPv4
+ENV NODE_OPTIONS="--dns-result-order=ipv4first"
 RUN npm install --prefer-offline --no-audit --no-fund --maxsockets 1
+
 # Copy source code
 COPY . .
 # Build the application
