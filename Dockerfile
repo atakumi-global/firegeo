@@ -1,6 +1,11 @@
 # Use an official Node.js image
 FROM node:20
 
+# 1. Declare the build-time arg for your API key
+ARG BRAND_MONITOR_API_KEY
+# 2. Make that arg available to Next.js during build
+ENV BRAND_MONITOR_API_KEY=${BRAND_MONITOR_API_KEY}
+
 # Set working directory
 WORKDIR /app
 
