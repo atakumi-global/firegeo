@@ -1,36 +1,24 @@
-FROM node:18-slim AS builder
-# Install required packages
-RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
-# Create a custom npm configuration
-RUN npm config set prefer-online false
-RUN npm config set registry https://registry.npmjs.org/
-RUN npm config set fetch-retry-mintimeout 60000
-RUN npm config set fetch-retry-maxtimeout 300000
-RUN npm config set fetch-retries 10
-# Force IPv4 via environment variables
-ENV NPM_CONFIG_IPV6=false
+# Use an official Node.js image
+FROM node:20
+
+# Set working directory
 WORKDIR /app
-# Copy package files
+
+# Copy package files and install dependencies early for caching
 COPY package*.json ./
+RUN npm install
 
-# Set Node.js to prefer IPv4
-ENV NODE_OPTIONS="--dns-result-order=ipv4first"
-RUN npm install --prefer-offline --no-audit --no-fund --maxsockets 1
-
-# Copy source code
+# Copy the rest of the application code
 COPY . .
-# Build the application
+
+# Force Node to prioritize IPv4
+ENV NODE_OPTIONS=--dns-result-order=ipv4first
+
+# Build the Next.js application
 RUN npm run build
-# Production stage
-FROM node:18-slim
-WORKDIR /app
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/.next ./.next
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/package*.json ./
 
-ENV NODE_OPTIONS="--dns-result-order=ipv4first"
-RUN npm config set registry https://registry.npmjs.org/
-
+# Expose Next.js default port
 EXPOSE 3000
-CMD ["npm", "start"]
+
+# Start the production server
+CMD ["npm", "run", "start"]
